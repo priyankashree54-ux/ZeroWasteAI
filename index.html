@@ -1,0 +1,36 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ZeroWaste AI</title><link rel="stylesheet" href="/static/style.css"></head><body>
+<header><div class="logo">♻ ZeroWaste AI</div><div class="tag">SDG 12 · Responsible Consumption &amp; Production</div></header>
+<main>
+<section class="stats">
+ <div class="card"><b>{{stats.runs}}</b><span>Predictions made</span></div>
+ <div class="card"><b>{{stats.kg}} kg</b><span>Surplus food redirected</span></div>
+ <div class="card"><b>{{stats.meals}}</b><span>Meals enabled</span></div>
+ <div class="card"><b>{{stats.co2}} kg</b><span>CO₂e avoided</span></div>
+</section>
+<section class="panel"><h2>1. Predict surplus food</h2>
+<form method="post" action="/predict">
+ <label>Vendor type<select name="vendor_type">{% for v in vendors %}<option {{'selected' if form.vendor_type==v}}>{{v}}</option>{% endfor %}</select></label>
+ <label>Day<select name="day_of_week">{% for d in days %}<option value="{{loop.index0}}" {{'selected' if form.day_of_week==loop.index0|string}}>{{d}}</option>{% endfor %}</select></label>
+ <label>Meals/items prepared<input type="number" name="meals_prepared" value="{{form.meals_prepared or 200}}" min="10" max="2000"></label>
+ <label>Expected customers<input type="number" name="expected_footfall" value="{{form.expected_footfall or 150}}" min="0" max="3000"></label>
+ <label>Your latitude<input name="lat" value="{{form.lat or 28.6139}}"></label>
+ <label>Your longitude<input name="lon" value="{{form.lon or 77.2090}}"></label>
+ <label class="chk"><input type="checkbox" name="festival" {{'checked' if form.festival}}> Festival / event today</label>
+ <label class="chk"><input type="checkbox" name="rain" {{'checked' if form.rain}}> Rainy day</label>
+ <button>Predict &amp; match NGOs</button>
+</form></section>
+{% if result %}
+<section class="panel result"><h2>2. AI result</h2>
+ <div class="big">{{result.surplus}} kg <small>predicted surplus</small></div>
+ <h3>Redistribution plan</h3>
+ <table><tr><th>NGO</th><th>Serves</th><th>Km</th><th>Kg</th><th>Meals</th></tr>
+ {% for p in result.plan %}<tr><td>{{p.ngo}}</td><td>{{p.serves}}</td><td>{{p.distance_km}}</td><td>{{p.kg}}</td><td>{{p.meals}}</td></tr>{% endfor %}</table>
+ <p><b>Total meals enabled:</b> {{result.meals}}</p>
+ <h3>Smart recommendations</h3><ul>{% for a in result.advice %}<li>{{a}}</li>{% endfor %}</ul>
+</section>{% endif %}
+{% if history %}<section class="panel"><h2>Recent activity</h2>
+<table><tr><th>Vendor</th><th>Day</th><th>Surplus (kg)</th><th>Meals</th></tr>
+{% for h in history %}<tr><td>{{h.vendor}}</td><td>{{h.day}}</td><td>{{h.surplus}}</td><td>{{h.meals}}</td></tr>{% endfor %}</table></section>{% endif %}
+<footer>Model: Random Forest · MAE {{metrics.mae}} kg · R² {{metrics.r2}}</footer>
+</main></body></html>
